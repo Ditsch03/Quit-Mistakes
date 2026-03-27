@@ -1,6 +1,7 @@
 const API_URL = 'https://quitmistakes-backend.onrender.com';
 let viewedUserId = null;
 let viewedUserName = "";
+let currentRaceId = null;
 
 
 // Prüfen, ob der User bereits eingeloggt war, wenn die Seite lädt
@@ -158,7 +159,6 @@ function showDashboard(username) {
     loadRaces(); // <--- Neu: Lädt die Wettkämpfe direkt beim Login
 }
 
-let currentRaceId = null;
 
 async function selectRace(raceId, raceName, raceMap) {
     // 1. IDs klären
