@@ -268,6 +268,7 @@ async function saveError() {
 }
 
 async function loadErrors(raceId) {
+    currentRaceId = raceId
     const response = await fetch(`${API_URL}/errors/${raceId}`);
     const errors = await response.json();
     const tableBody = document.getElementById('error-list-body');
