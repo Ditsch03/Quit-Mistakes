@@ -5,7 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
@@ -240,8 +240,8 @@ app.post('/friends/reject', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server läuft auf http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server läuft auf Port ${PORT}`);
 });
 
 
