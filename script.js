@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://quitmistakes-backend.onrender.com';
 let viewedUserId = null;
 let viewedUserName = "";
 
