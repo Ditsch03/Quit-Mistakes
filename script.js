@@ -210,30 +210,60 @@ function backToDashboard() {
 }
 
 async function saveError() {
-
     const myId = parseInt(localStorage.getItem('userId'));
-    if (viewedUserId !== myId) {
+
+    // Debug-Log: Was ist gerade Sache?
+    console.log("Speichere Fehler für Race:", currentRaceId, "User:", myId, "Viewed:", viewedUserId);
+
+    if (!currentRaceId) {
+        alert("Kein Rennen ausgewählt!");
+        return;
+    }
+
+    if (viewedUserId && viewedUserId !== myId) {
         alert("Du hast keine Berechtigung, Fehler für diesen User zu speichern.");
         return;
     }
 
+    // Werte auslesen
     const legNumber = document.getElementById('err-leg').value;
     const timeLoss = document.getElementById('err-time').value;
     const errorType = document.getElementById('err-type').value;
     const description = document.getElementById('err-desc').value;
 
-    const response = await fetch(`${API_URL}/errors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raceId: currentRaceId, legNumber, timeLoss, errorType, description })
-    });
+    // Pflichtfelder-Check (verhindert leere Datenbank-Einträge)
+    if (!legNumber || !timeLoss) {
+        alert("Bitte Posten-Nummer und Zeitverlust angeben.");
+        return;
+    }
 
-    if (response.ok) {
-        loadErrors(currentRaceId);
-        // Felder zurücksetzen
-        document.getElementById('err-leg').value = '';
-        document.getElementById('err-time').value = '';
-        document.getElementById('err-desc').value = '';
+    try {
+        const response = await fetch(`${API_URL}/errors`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                raceId: currentRaceId,
+                legNumber: parseInt(legNumber),
+                timeLoss: parseFloat(timeLoss),
+                errorType,
+                description
+            })
+        });
+
+        if (response.ok) {
+            console.log("Fehler erfolgreich gespeichert");
+            loadErrors(currentRaceId);
+            // Felder zurücksetzen
+            document.getElementById('err-leg').value = '';
+            document.getElementById('err-time').value = '';
+            document.getElementById('err-desc').value = '';
+        } else {
+            const errData = await response.json();
+            alert("Fehler vom Server: " + errData.error);
+        }
+    } catch (error) {
+        console.error("Netzwerkfehler:", error);
+        alert("Verbindung zum Server fehlgeschlagen.");
     }
 }
 
