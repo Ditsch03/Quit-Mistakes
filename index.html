@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuitMistakes - OL Analyse</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <header class="title">
+        <h1>QuitMistakes</h1>
+        <p>Analysetool für den Orientierungslauf</p>
+    </header>
+
+    <div id="auth-section">
+        <div id="login-box" class="card">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="E-Mail">
+            <input type="password" id="login-password" placeholder="Passwort">
+            <button onclick="login()">Anmelden</button>
+            <p>Noch kein Konto? <a href="#" onclick="toggleAuth()">Registrieren</a></p>
+        </div>
+
+        <div id="register-box" class="card" style="display: none;">
+            <h2>Registrierung</h2>
+            <input type="text" id="reg-user" placeholder="Benutzername">
+            <input type="email" id="reg-email" placeholder="E-Mail">
+            <input type="password" id="reg-password" placeholder="Passwort">
+            <button onclick="register()">Konto erstellen</button>
+            <p>Bereits Mitglied? <a href="#" onclick="toggleAuth()">Zum Login</a></p>
+        </div>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+        <nav class="main-nav">
+            <button onclick="viewMyProfile()">👤 Ich</button>
+            <button onclick="showView('calendar-view')">📅 Kalender</button>
+            <button onclick="showView('friends-view')">👥 Freunde</button>
+            <button onclick="showView('analysis-view')">📊 Analyse</button>
+            <button onclick="logout()" class="btn-logout">Abmelden</button>
+        </nav>
+
+        <hr>
+
+        <div id="calendar-view" class="view">
+            <div class="calendar-header">
+                <button onclick="changeMonth(-1)">◀</button>
+                <h2 id="current-month-display"></h2> <button onclick="changeMonth(1)">▶</button>
+            </div>
+
+            <h3 id="calendar-owner-title" style="text-align: center; color: #3498db; margin-bottom: 15px;"></h3>
+            <div id="calendar-grid" class="calendar-grid">
+            </div>
+        </div>
+
+        <div id="analysis-view" class="view" style="display:none;">
+            <h2>Dein Analyse-Zentrum</h2>
+            <div id="stats-content" class="card">
+            </div>
+        </div>
+    </div>
+
+    <div id="race-modal" class="modal" style="display:none;">
+        <div class="modal-content card">
+            <h3>Wettkampf für den <span id="selected-date-display"></span></h3>
+            <input type="text" id="race-name" placeholder="Name des Wettkampfs">
+            <input type="text" id="race-map" placeholder="Karte">
+            <button onclick="saveRaceFromCalendar()">Speichern & Fehler erfassen</button>
+            <button onclick="closeModal()" class="btn-secondary">Abbrechen</button>
+        </div>
+    </div>
+    <div id="error-detail-view" style="display: none;">
+        <button onclick="backToDashboard()" class="btn-secondary">← Zurück</button>
+        <h2 id="selected-race-name">Wettkampf Name</h2>
+        <p id="selected-race-map" style="font-style: italic; color: #666;"></p>
+
+        <div id="new-error-form" class="card">
+            <h3>Neuen Fehler loggen</h3>
+            <input type="number" id="err-leg" placeholder="Teilstrecke (z.B. 1)">
+            <input type="number" id="err-time" placeholder="Zeitverlust (Sekunden)">
+            <select id="err-type">
+                <option value="Richtung">Richtung</option>
+                <option value="Parallel">Parallel</option>
+                <option value="Routenwahl">Routenwahl</option>
+                <option value="Postenraum">Postenraum</option>
+                <option value="Distanz">Distanz</option>
+                <option value="Administrativ">Administrativ</option>
+            </select>
+            <textarea id="err-desc" placeholder="Was ist passiert?"></textarea>
+            <button id="save-error-btn" onclick="saveError()">Fehler speichern</button>
+        </div>
+
+        <div class="card">
+            <h3>Erfasste Fehler</h3>
+            <table id="error-table" style="width:100%; border-collapse: collapse;">
+                <thead>
+                <tr>
+                    <th>Leg</th>
+                    <th>Zeit</th>
+                    <th>Typ</th>
+                    <th>Bemerkung</th> </tr>
+                </thead>
+                <tbody id="error-list-body">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="friends-view" class="view" style="display:none;">
+        <div class="card">
+            <h3>Nutzer suchen</h3>
+            <input type="text" id="user-search-input" placeholder="Username eingeben...">
+            <button onclick="searchUsers()">Suchen</button>
+            <div id="search-results"></div>
+        </div>
+        <div class="card">
+            <h3>Meine Verbindungen</h3>
+            <div id="friends-list"></div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

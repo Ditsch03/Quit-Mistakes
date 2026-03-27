@@ -1,0 +1,182 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+}
+
+.container {
+    width: 95%;
+    max-width: 1000px; /* Breiter für Laptop */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+
+}
+
+.title{
+    align-self: center;
+}
+
+.card {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    width: 60%;
+    justify-self: center;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* Wichtig für Padding */
+}
+
+button {
+    width: 30%;
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.main-nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+.main-nav button { width: auto; background: #34495e; }
+
+.calendar-header { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; }
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    background: #ccc;
+    border: 1px solid #ccc;
+}
+
+.calendar-day {
+    background: white;
+    min-height: 100px; /* Deutlich höher für Laptop */
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Falls viele Rennen an einem Tag sind */
+}
+
+.calendar-race-link {
+    background-color: #007bff;
+    color: white;
+    font-size: 0.7em;
+    padding: 2px 4px;
+    margin-top: 2px;
+    border-radius: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.calendar-header h2 {
+    font-size: 1.5rem; /* Standardgröße */
+    margin: 0 10px;
+    text-align: center;
+    white-space: nowrap; /* Verhindert den Zeilenumbruch */
+    flex: 1; /* Nimmt den verfügbaren Platz in der Mitte ein */
+}
+
+@media (max-width: 450px) {
+    .calendar-header h2 {
+        font-size: 1.1rem; /* Schrift wird kleiner, damit sie passt */
+    }
+
+    .calendar-header button {
+        padding: 5px 10px; /* Kleinere Pfeil-Buttons auf dem Handy */
+    }
+}
+
+@media (max-width: 600px) {
+    .calendar-day {
+        min-height: 60px; /* Etwas kleiner auf dem Handy */
+        font-size: 0.7em;
+    }
+
+    .main-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .main-nav button {
+        flex: 1;
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    /* Tabelle auf Handy scrollbar machen */
+    .card {
+        padding: 1rem;
+        overflow-x: auto;
+        width: 90%;
+    }
+}
+
+.calendar-race-link:hover {
+    background-color: #0056b3;
+}
+
+/* Tabelle für Fehler-Details aufhübschen */
+#error-table th, #error-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.calendar-day:hover { background: #e9ecef; }
+.calendar-day.has-race { background: #d4edda; border: 1px solid #28a745; }
+
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+}
+.modal-content { width: 90%; max-width: 400px; }
+
+.btn-logout { background: #e74c3c !important; }
+
+button:hover { background-color: #218838; }
+
+a { color: #007bff; text-decoration: none; cursor: pointer; }
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+/* Tage im Kalender, die nicht anklickbar sind */
+.calendar-day.readonly {
+    background-color: #fdfdfd;
+    color: #999;
+}
+
+.calendar-day.readonly:hover {
+    background-color: #fdfdfd; /* Keinen Hover-Effekt bei fremden Profilen */
+    transform: none;
+}
+
+/* Hinweis-Banner (Optional) */
+.view-only-banner {
+    background: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ffeeba;
+    display: none; /* Standardmäßig aus */
+}
