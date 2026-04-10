@@ -30,54 +30,126 @@ function toggleAuth() {
 }
 
 // REGISTRIERUNG
+// Hilfsfunktion zum Anzeigen/Löschen von Fehlern
+function showError(elementId, message) {
+    const errorSpan = document.getElementById(elementId);
+    if (errorSpan) {
+        errorSpan.innerText = message;
+        errorSpan.style.opacity = message ? "1" : "0";
+    }
+}
+
 async function register() {
-    const username = document.getElementById('reg-user').value;
-    const email = document.getElementById('reg-email').value;
+    // Alle alten Fehler löschen
+    document.querySelectorAll('.error-msg').forEach(el => el.innerText = "");
+
+    const username = document.getElementById('reg-user').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
 
-    if (!username || !email || !password) {
-        return alert("Bitte alle Felder ausfüllen!");
+
+    let hasError = false;
+
+    // 1. Check: Benutzername
+    if (!username) {
+        showError('error-user', "Name darf nicht leer sein.");
+        hasError = true;
     }
 
-    const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
-    });
+    // 2. E-Mail Validierung
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showError('error-email', "Ungültige E-Mail-Adresse.");
+        hasError = true;
+    }
 
-    const data = await response.json();
+    // 3. Passwort Validierung
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    if (!passwordRegex.test(password)) {
+        showError('error-password', "Min. 6 Zeichen, Zahl & Buchstabe nötig.");
+        hasError = true;
+    }
 
-    if (response.ok) {
-        alert("Registrierung erfolgreich! Du kannst dich jetzt einloggen.");
-        toggleAuth(); // Zurück zum Login
-    } else {
-        alert("Fehler: " + data.error);
+    if (hasError) {
+        return;
+    } // Stopp, wenn Validierung fehlschlägt
+
+
+
+    try {
+        const response = await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            // Erfolg (vielleicht hier ein grünes Toast-Fenster?)
+            alert("Registrierung erfolgreich!");
+            toggleAuth();
+        } else {
+            // Server-Fehler (z.B. Email existiert bereits)
+            showError('error-general', data.error);
+        }
+    } catch (err) {
+        showError('error-general', "Server nicht erreichbar.");
     }
 }
 
 // LOGIN
 async function login() {
-    const email = document.getElementById('login-email').value;
+    // 1. Alle alten Fehlermeldungen löschen
+    document.querySelectorAll('.error-msg').forEach(el => el.innerText = "");
+
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
 
-    const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
+    let hasError = false;
 
-    const data = await response.json();
-
-    if (response.ok) {
-        // Erfolg: Wir speichern die User-Info im Browser-Speicher (Session)
-        localStorage.setItem('userId', data.user.id);
-        localStorage.setItem('username', data.user.username);
-
-        showDashboard(data.user.username);
-    } else {
-        alert("Login fehlgeschlagen: " + data.error);
+    // 2. Einfache Vorab-Prüfung (Client-seitig)
+    if (!email) {
+        showError('error-login-email', "Bitte E-Mail eingeben.");
+        hasError = true;
+    }
+    if (!password) {
+        showError('error-login-password', "Bitte Passwort eingeben.");
+        hasError = true;
     }
 
+    if (hasError) return;
+
+    // 3. Login-Button deaktivieren (optional, verhindert Mehrfachklicks)
+    const loginBtn = document.querySelector('button[onclick="login()"]');
+    if(loginBtn) loginBtn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Erfolg: User-Daten speichern
+            localStorage.setItem('userId', data.user.id);
+            localStorage.setItem('username', data.user.username);
+
+            // Dashboard anzeigen
+            showDashboard(data.user.username);
+        } else {
+            // Server meldet Fehler (z.B. "User nicht gefunden" oder "Passwort falsch")
+            // Wir zeigen das meist zentral an, um nicht zu verraten, OB die E-Mail existiert (Sicherheit!)
+            showError('error-login-general', data.error || "Login fehlgeschlagen.");
+        }
+    } catch (err) {
+        showError('error-login-general', "Server nicht erreichbar. Bitte später versuchen.");
+    } finally {
+        // Button wieder aktivieren
+        if(loginBtn) loginBtn.disabled = false;
+    }
 }
 
 // Zeigt das Dashboard nach dem Login
@@ -285,24 +357,77 @@ async function loadErrors(raceId) {
     });
 }
 
-async function loadStatistics() {
-    const userId = localStorage.getItem('userId');
-    const response = await fetch(`${API_URL}/stats/${userId}`);
-    const stats = await response.json();
+async function loadAnalysis() {
+    let targetUserId = document.getElementById('analysis-user-select').value;
 
-    const statsContent = document.getElementById('stats-content');
-    if (stats.length === 0) {
-        statsContent.innerHTML = "<p>Noch keine Fehlerdaten für Statistiken vorhanden.</p>";
+    // Falls "Ich selbst" gewählt wurde, nimm die eigene ID
+    if (targetUserId === 'me') {
+        targetUserId = localStorage.getItem('userId');
+    }
+
+    const start = document.getElementById('analysis-start-date').value;
+    const end = document.getElementById('analysis-end-date').value;
+
+    if (!start || !end) {
+        alert("Bitte wähle einen Zeitbereich aus!");
         return;
     }
 
-    let html = "<ul>";
-    stats.forEach(s => {
-        html += `<li><strong>${s.ErrorType}:</strong> ${s.Count} Fehler (${s.TotalTimeLoss}s Verlust)</li>`;
-    });
-    html += "</ul>";
-    statsContent.innerHTML = html;
+    const response = await fetch(`${API_URL}/analysis/${targetUserId}?start=${start}&end=${end}`);
+    const errors = await response.json();
+
+    displayAnalysisResults(errors);
 }
+
+function displayAnalysisResults(errors) {
+    const summaryDiv = document.getElementById('stats-summary');
+
+    if (errors.length === 0) {
+        summaryDiv.innerHTML = "<p>Keine Daten für diesen Zeitraum gefunden.</p>";
+        return;
+    }
+
+    // Beispiel-Berechnung: Gesamt-Zeitverlust
+    const totalLoss = errors.reduce((sum, err) => sum + err.timeLoss, 0);
+    const avgLoss = (totalLoss / errors.length).toFixed(2);
+
+    summaryDiv.innerHTML = `
+        <div class="stat-card">
+            <h3>Zusammenfassung</h3>
+            <p>Anzahl Fehler: <strong>${errors.length}</strong></p>
+            <p>Gesamt-Zeitverlust: <strong>${totalLoss} min</strong></p>
+            <p>Schnitt pro Fehler: <strong>${avgLoss} min</strong></p>
+        </div>
+    `;
+
+    // Hier könnten wir später noch ein Diagramm einbauen!
+}
+
+async function populateUserSelect() {
+    const select = document.getElementById('analysis-user-select');
+    const myId = localStorage.getItem('userId');
+
+    try {
+        const response = await fetch(`${API_URL}/users`);
+        const users = await response.json();
+
+        select.innerHTML = '<option value="me">Ich selbst</option>';
+
+        users.forEach(user => {
+            // Wichtig: .UserID und .Username verwenden!
+            if (user.UserID.toString() !== myId) {
+                const option = document.createElement('option');
+                option.value = user.UserID;
+                option.textContent = user.Username;
+                select.appendChild(option);
+            }
+        });
+    } catch (err) {
+        console.error("Fehler beim Laden der User-Liste:", err);
+    }
+}
+
+
 
 // Erweitere die showDashboard Funktion erneut, um die Stats zu laden:
 function showDashboard(username) {
@@ -337,7 +462,7 @@ function showView(viewId) {
     if (viewId === 'calendar-view') {
         renderCalendar();
     } else if (viewId === 'analysis-view') {
-        loadStatistics();
+        populateUserSelect();
     }
     if (viewId === 'friends-view') loadFriendsData();
 }
@@ -632,3 +757,9 @@ async function rejectFriend(friendshipId) {
         loadFriendsData();
     }
 }
+
+document.getElementById('login-password').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        login();
+    }
+});

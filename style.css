@@ -180,3 +180,17 @@ a { color: #007bff; text-decoration: none; cursor: pointer; }
     border-bottom: 1px solid #ffeeba;
     display: none; /* Standardmäßig aus */
 }
+
+.error-msg {
+    color: #ff4d4d;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 4px;
+    min-height: 1rem; /* Verhindert, dass das Layout springt */
+    transition: opacity 0.3s ease;
+}
+
+.auth-field input.invalid {
+    border: 1px solid #ff4d4d;
+    background-color: #fff2f2;
+}

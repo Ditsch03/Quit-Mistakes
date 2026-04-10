@@ -31,6 +31,22 @@ app.get('/', (req, res) => {
 app.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
 
+    // 1. Serverseitige Validierung
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: "Unvollständige Daten." });
+    }
+
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Ungültiges E-Mail-Format." });
+    }
+
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({ error: "Passwort erfüllt die Sicherheitsanforderungen nicht." });
+    }
+
     try {
         // 1. Passwort verschlüsseln (Salt-Rounds: 10)
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -215,6 +231,14 @@ app.get('/users/all', (req, res) => {
     });
 });
 
+app.get('/users', (req, res) => {
+    // Hole UserID und Username aus deiner "Users" Tabelle
+    db.all("SELECT UserID, Username FROM Users", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 // Freundschaftsanfrage annehmen
 app.post('/friends/accept', (req, res) => {
     const { friendshipId } = req.body;
@@ -237,6 +261,24 @@ app.post('/friends/reject', (req, res) => {
     db.run("DELETE FROM Friends WHERE FriendshipID = ?", [friendshipId], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: "Anfrage entfernt" });
+    });
+});
+
+app.get('/analysis/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { start, end } = req.query;
+
+    const sql = `
+        SELECT e.*, r.RaceDate, r.RaceName
+        FROM ErrorEntries e
+                 JOIN Races r ON e.RaceID = r.RaceID
+        WHERE r.UserID = ? AND r.RaceDate BETWEEN ? AND ?
+        ORDER BY r.RaceDate ASC
+    `;
+
+    db.all(sql, [userId, start, end], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows); // Schickt die Liste der Fehler zurück
     });
 });
 
